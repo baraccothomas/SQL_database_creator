@@ -1,6 +1,6 @@
 package database;
 
-public abstract class Attribute {
+public class Attribute {
 	public static enum AttributeType {
 		INT,
 		CHAR,
@@ -14,6 +14,9 @@ public abstract class Attribute {
 	
 	private boolean isPrimaryKey;
 	private boolean isForeignKey;
+	private boolean isNullable;
+	
+	private int size;
 	
 	private String foreignTableName, foreignAttributeName;
 	
@@ -29,6 +32,11 @@ public abstract class Attribute {
 		isPrimaryKey = false;
 		isForeignKey = false;
 		
+		foreignTableName = null;
+		foreignAttributeName = null;
+		isNullable = true;
+		
+		size = -1;
 	}
 	
 	@Override
@@ -65,6 +73,7 @@ public abstract class Attribute {
 	 */
 	public void setAsPrimaryKey() {
 		isPrimaryKey = true;
+		setAsNotNullable();
 	}
 	
 	/**
@@ -78,7 +87,65 @@ public abstract class Attribute {
 		isForeignKey = true;
 		this.foreignTableName = foreignTableName;
 		this.foreignAttributeName = foreignAttributeName;
+		setAsNotNullable();
 	}
 	
+	public boolean isPrimaryKey() {
+		return isPrimaryKey;
+	}
 	
+	public boolean isForeignKey() {
+		return isForeignKey;
+	}
+
+	public String getForeignTableName() {
+		return foreignTableName;
+	}
+
+	public String getForeignAttributeName() {
+		return foreignAttributeName;
+	}
+
+	public AttributeType getType() {
+		return type;
+	}
+	
+	public void setAsNotNullable() {
+		isNullable = false;
+	}
+	
+	public boolean isNullable() {
+		return isNullable;
+	}
+	
+	public int getSize() {
+		return size;
+	}
+
+	public void setSize(int size) {
+		this.size = size;
+	}
+
+	public void create() {
+		//TODO I/O request: ask if it's primary key
+		//TODO I/O request: ask if it's foreign key
+		//TODO I/O request: if not above, ask if it's nullable
+	}
+	
+	public String createSQL() {
+		StringBuffer buffer = new StringBuffer();
+		
+		buffer.append(name + " " + type.toString());
+		
+		if(size != -1)
+			buffer.append(" (" + size + ")");
+		
+		if(isPrimaryKey)
+			buffer.append(" PRIMARY KEY");
+		if(!isNullable)
+			buffer.append(" NOT NULL");
+		
+		buffer.append(",");
+		return buffer.toString();
+	}
 }
