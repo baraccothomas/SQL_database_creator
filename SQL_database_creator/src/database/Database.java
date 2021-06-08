@@ -1,5 +1,8 @@
 package database;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,13 +27,25 @@ public class Database {
 		return this;
 	}
 	
-	public void create() {
+	public void create() throws IOException, NumberFormatException, DatabaseException {
 		int nTables = 0;
-		//TODO add the request from I/O of the number of tables
+		
+		System.out.print("Number of tables: ");
+		
+		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+		nTables = Integer.parseInt(in.readLine());
+		
+		System.out.println();
+		
 		for(int i = 0; i < nTables; i++) {
 			String tableName = "";
 			
-			//TODO add the request from I/O of the name of the current table
+			System.out.print("Name of the " + (i + 1) + " table: ");
+			
+			in = new BufferedReader(new InputStreamReader(System.in));
+			tableName = in.readLine();
+			
+			System.out.println();
 			
 			Table table = new Table(tableName);
 			
@@ -40,7 +55,10 @@ public class Database {
 		}
 	}
 	
-	public String createSQL() {
+	public String createSQL() throws DatabaseException {
+		if(tables.size() == 0)
+			throw new DatabaseException("Database not created");
+		
 		StringBuffer buffer = new StringBuffer();
 		
 		buffer.append("CREATE DATABASE IF NOT EXISTS " + name + ";\n\n");

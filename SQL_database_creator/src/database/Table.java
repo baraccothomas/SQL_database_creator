@@ -1,9 +1,11 @@
 package database;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import database.Attribute.AttributeType;
@@ -53,17 +55,57 @@ public class Table {
 		return true;
 	}
 	
-	public void create() {
+	public void create() throws NumberFormatException, IOException, DatabaseException {
 		int nAttributes = 0;
-		//TODO I/O request: number of attributes
+		
+		System.out.print("Number of attributes: ");
+		
+		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+		nAttributes= Integer.parseInt(in.readLine());
+		
+		System.out.println();
+		
 		for(int i = 0; i < nAttributes; i++) {
 			String attributeName = "";
-			Attribute.AttributeType type = null;
+			AttributeType type = null;
 			
-			//TODO I/O request: name of current attribute
-			//TODO I/O request: type of current attribute
+			System.out.print("Name of the " + (i + 1) + " attribute: ");
+			
+			in = new BufferedReader(new InputStreamReader(System.in));
+			attributeName = in.readLine();
+			
+			System.out.println();
+			
+			for(int j = 0; j < AttributeType.values().length; j++) {
+				System.out.println((j + 1) + ". " + AttributeType.values()[j]);
+			}
+			
+			System.out.println();
+			
+			System.out.print("Index of the current attribute type: ");
+			
+			in = new BufferedReader(new InputStreamReader(System.in));
+			int index = Integer.parseInt(in.readLine());
+			
+			System.out.println();
+			
+			if(index < 0 && index > AttributeType.values().length)
+				throw new DatabaseException("Index out of range");
+			
+			type = AttributeType.values()[index - 1];
 			
 			Attribute attribute = new Attribute(attributeName, type);
+			
+			if(attribute.getType() == AttributeType.CHAR) {
+				System.out.print("Size of the attribute: ");
+				
+				in = new BufferedReader(new InputStreamReader(System.in));
+				int size = Integer.parseInt(in.readLine());
+				
+				System.out.println();
+				
+				attribute.setSize(size);
+			}
 			
 			attribute.create();
 			
@@ -84,14 +126,22 @@ public class Table {
 										.filter(Attribute::isPrimaryKey)
 										.collect(Collectors.mapping(Attribute::getName, Collectors.toList()));
 		if(primaryKeys.size() > 0) {
-			buffer.append("PRIMARY KEY (" + primaryKeys.get(0));
+			buffer.append("PRIMARY KEY(" + primaryKeys.get(0));
 			primaryKeys.stream().skip(1).forEach(n -> buffer.append(", " + n));
 			buffer.append("),\n");
 		}
 		
-		attributes.stream()
-			.filter(Attribute::isForeignKey)
-			.forEach(a -> buffer.append("FOREIGN KEY (" + a.getName() + ") REFERENCES " + a.getForeignTableName() + " (" + a.getForeignAttributeName() + ")\nON UPDATE CASCADE\nON DELETE CASCADE,\n"));
+		Map<String, List<Attribute>> foreignKeys = attributes.stream()
+													.filter(Attribute::isForeignKey)
+													.collect(Collectors.groupingBy(Attribute::getForeignTableName));
+		
+		foreignKeys.forEach((t, l) -> {
+			buffer.append("FOREIGN KEY(" + l.get(0).getName());
+			l.stream().skip(1).forEach(a -> buffer.append(", " + a.getName()));
+			buffer.append(") REFERENCES " + t + "(" + l.get(0).getForeignAttributeName());
+			l.stream().skip(1).forEach(a -> buffer.append(", " + a.getForeignAttributeName()));
+			buffer.append(")\nON UPDATE CASCADE\nON DELETE CASCADE,\n");
+		});
 		
 		buffer.append(");");
 		return buffer.toString();

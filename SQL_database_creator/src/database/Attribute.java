@@ -1,5 +1,9 @@
 package database;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 public class Attribute {
 	public static enum AttributeType {
 		INT,
@@ -126,10 +130,55 @@ public class Attribute {
 		this.size = size;
 	}
 
-	public void create() {
-		//TODO I/O request: ask if it's primary key
-		//TODO I/O request: ask if it's foreign key
-		//TODO I/O request: if not above, ask if it's nullable
+	public void create() throws IOException {
+		System.out.print("It's a primary key [Y/N]?: ");
+		
+		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+		String response = in.readLine();
+		
+		System.out.println();
+		
+		if(response.toLowerCase().equals("y")) {
+			setAsPrimaryKey();
+		}
+		
+		System.out.print("It's a foreign key [Y/N]?: ");
+		
+		in = new BufferedReader(new InputStreamReader(System.in));
+		response = in.readLine();
+		
+		System.out.println();
+		
+		if(response.toLowerCase().equals("y")) {
+			System.out.print("Foreign table name: ");
+			
+			in = new BufferedReader(new InputStreamReader(System.in));
+			String foreignTableName = in.readLine();
+			
+			System.out.println();
+			
+			System.out.print("Foreign attribute name: ");
+			
+			in = new BufferedReader(new InputStreamReader(System.in));
+			String foreignAttributeName = in.readLine();
+			
+			System.out.println();
+			
+			setAsForeignKey(foreignTableName, foreignAttributeName);
+		}
+
+		if(!isPrimaryKey() && !isForeignKey()) {
+			System.out.print("It's nullable [Y/N]?: ");
+			
+			in = new BufferedReader(new InputStreamReader(System.in));
+			response = in.readLine();
+			
+			System.out.println();
+			
+			if(response.toLowerCase().equals("n")) {
+				setAsNotNullable();
+			}
+		}
 	}
 	
 	public String createSQL() {
@@ -140,8 +189,6 @@ public class Attribute {
 		if(size != -1)
 			buffer.append(" (" + size + ")");
 		
-		if(isPrimaryKey)
-			buffer.append(" PRIMARY KEY");
 		if(!isNullable)
 			buffer.append(" NOT NULL");
 		
